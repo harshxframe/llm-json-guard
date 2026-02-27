@@ -1,15 +1,14 @@
-# Updated README.md (Final Version)
-
 ````markdown
 # llm-json-guard
 
 Production-safe JSON repair and schema validation for LLM outputs.
 
 Large Language Models frequently return malformed JSON containing:
-- Missing quotes
-- Trailing commas
-- Invalid tokens
-- Broken object structures
+
+- Missing quotes  
+- Trailing commas  
+- Invalid tokens  
+- Broken object structures  
 
 This package provides a lightweight wrapper around a production-grade JSON repair and validation API, allowing you to sanitize and enforce schema validation in seconds.
 
@@ -28,8 +27,8 @@ npm install llm-json-guard
 * Node.js 18+
 * RapidAPI key
 
-Get your API key here:
-[(https://rapidapi.com/scotedflotsincoltd/api/llm-json-sanitizer-schema-guard)](https://rapidapi.com/scotedflotsincoltd/api/llm-json-sanitizer-schema-guard)
+Get your RapidAPI key here:
+[https://rapidapi.com/scotedflotsincoltd/api/llm-json-sanitizer-schema-guard](https://rapidapi.com/scotedflotsincoltd/api/llm-json-sanitizer-schema-guard)
 
 ---
 
@@ -134,4 +133,3 @@ MIT
 ````
 
 ---
-
