@@ -14,5 +14,9 @@
     "schema"
   ],
   "author": "Harsh Verma",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/harshxframe/llm-json-guard.git"
+  },
   "license": "MIT"
 }
