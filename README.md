@@ -1,7 +1,7 @@
 ````markdown
 # llm-json-guard
 
-Production-safe JSON repair and schema validation for LLM outputs.
+Deterministic JSON repair and schema validation for LLM outputs.
 
 Large Language Models frequently return malformed JSON containing:
 
@@ -10,7 +10,7 @@ Large Language Models frequently return malformed JSON containing:
 - Invalid tokens  
 - Broken object structures  
 
-This package provides a lightweight wrapper around a production-grade JSON repair and validation API, allowing you to sanitize and enforce schema validation in seconds.
+`llm-json-guard` repairs malformed JSON and optionally validates it against a JSON Schema — locally, instantly, and without network dependencies.
 
 ---
 
@@ -18,17 +18,33 @@ This package provides a lightweight wrapper around a production-grade JSON repai
 
 ```bash
 npm install llm-json-guard
-````
+```
 
 ---
 
 ## Requirements
 
-* Node.js 18+
-* RapidAPI key
+- Node.js 18+
 
-Get your RapidAPI key here:
-[https://rapidapi.com/scotedflotsincoltd/api/llm-json-sanitizer-schema-guard](https://rapidapi.com/scotedflotsincoltd/api/llm-json-sanitizer-schema-guard)
+No API keys.  
+No external services.  
+Runs fully local inside your application.
+
+---
+
+## Why Use This?
+
+LLMs do not guarantee valid JSON. Even a single trailing comma can crash production systems.
+
+This package provides:
+
+- Deterministic JSON repair (no extra model calls)
+- Confidence scoring based on repair intensity
+- Optional JSON Schema validation
+- Structured error responses
+- Production-safe output handling
+
+It acts as a reliability layer between your LLM and your business logic.
 
 ---
 
@@ -37,16 +53,14 @@ Get your RapidAPI key here:
 ```js
 import { LLMJsonGuard } from "llm-json-guard";
 
-const guard = new LLMJsonGuard({
-  apiKey: process.env.RAPIDAPI_KEY
-});
+const guard = new LLMJsonGuard();
 
-// Sanitize only
-const sanitized = await guard.sanitize("{name: 'Harsh', age: 21,}");
-console.log(sanitized.data);
+// Repair only
+const sanitized = guard.sanitize("{name: 'Harsh', age: 21,}");
+console.log(sanitized);
 
-// Sanitize + Validate
-const validated = await guard.guard(
+// Repair + Validate
+const validated = guard.guard(
   "{name: 'Harsh', age: 21,}",
   {
     type: "object",
@@ -58,36 +72,36 @@ const validated = await guard.guard(
   }
 );
 
-console.log(validated.data);
+console.log(validated);
 ```
 
 ---
 
 ## API Methods
 
-### sanitize(rawOutput)
+### `sanitize(rawOutput)`
 
-Repairs malformed JSON and returns safely parsed output.
+Repairs malformed JSON and safely parses it.
 
 Returns:
 
-* `success`
-* `stage`
-* `meta` (repair status + confidence)
-* `data`
-* `errors`
+- `success`
+- `stage`
+- `meta` (repair status + confidence)
+- `data`
+- `errors`
 
 ---
 
-### guard(rawOutput, schema)
+### `guard(rawOutput, schema)`
 
 Repairs malformed JSON and validates it against a JSON Schema.
 
 Returns:
 
-* `validated` stage if schema passes
-* `validation_failed` if schema check fails
-* structured validation errors
+- `validated` stage if schema passes
+- `validation_failed` if schema check fails
+- Structured validation errors
 
 ---
 
@@ -113,14 +127,26 @@ Example successful response:
 
 ---
 
+## Failure Stages
+
+The package clearly indicates failure states:
+
+- `parse_failed` — JSON could not be repaired
+- `repair_suspicious` — Repair heavily modified input
+- `validation_failed` — Schema validation failed
+
+This ensures your application can safely branch logic based on reliability.
+
+---
+
 ## When To Use
 
-* AI agents generating structured output
-* RAG pipelines
-* Backend systems consuming LLM JSON
-* Automation workflows
-* Webhook normalization
-* Contract enforcement
+- AI agents generating structured output
+- RAG pipelines
+- Backend systems consuming LLM JSON
+- Automation workflows
+- Webhook normalization
+- Contract enforcement
 
 If your system depends on structured AI output, this acts as a guardrail between the LLM and your production logic.
 
@@ -129,7 +155,4 @@ If your system depends on structured AI output, this acts as a guardrail between
 ## License
 
 MIT
-
 ````
-
----
