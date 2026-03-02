@@ -24,6 +24,7 @@ npm install llm-json-guard
 ## Requirements
 
 - Node.js 18+
+- ESM environment (`"type": "module"` in package.json)
 
 No API keys.  
 No external services.  
@@ -39,7 +40,7 @@ This package provides:
 
 - Deterministic JSON repair (no extra model calls)
 - Confidence scoring based on repair intensity
-- Optional JSON Schema validation
+- Optional JSON Schema validation (AJV)
 - Structured error responses
 - Production-safe output handling
 
@@ -47,31 +48,47 @@ It acts as a reliability layer between your LLM and your business logic.
 
 ---
 
-## Basic Usage
+## Quick Example
 
 ```js
 import { LLMJsonGuard } from "llm-json-guard";
 
 const guard = new LLMJsonGuard();
 
+const rawOutput = `
+{
+  name: "Harsh",
+  age: 21,
+}
+`;
+
+const schema = {
+  type: "object",
+  properties: {
+    name: { type: "string" },
+    age: { type: "number" }
+  },
+  required: ["name", "age"]
+};
+
 // Repair only
-const sanitized = guard.sanitize("{name: 'Harsh', age: 21,}");
-console.log(sanitized);
+const sanitized = guard.sanitize(rawOutput);
+console.log("Sanitized:", sanitized);
 
 // Repair + Validate
-const validated = guard.guard(
-  "{name: 'Harsh', age: 21,}",
-  {
-    type: "object",
-    properties: {
-      name: { type: "string" },
-      age: { type: "number" }
-    },
-    required: ["name", "age"]
-  }
-);
+const validated = guard.guard(rawOutput, schema);
+console.log("Validated:", validated);
+```
 
-console.log(validated);
+---
+
+## Run Local Example (From Repository)
+
+```bash
+git clone https://github.com/harshxframe/llm-json-guard.git
+cd llm-json-guard
+npm install
+node examples/basic.js
 ```
 
 ---
