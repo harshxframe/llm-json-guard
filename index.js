@@ -1,58 +1,109 @@
+import { jsonrepair } from "jsonrepair";
+import Ajv from "ajv";
+
+const ajv = new Ajv({ allErrors: true });
+
 class LLMJsonGuard {
-  constructor({ apiKey }) {
-    if (!apiKey) {
-      throw new Error("RapidAPI key is required");
-    }
+  constructor() {}
 
-    this.apiKey = apiKey;
-    this.baseUrl =
-      "https://llm-json-sanitizer-schema-guard.p.rapidapi.com";
-  }
-
-  async sanitize(rawOutput) {
+  sanitize(rawOutput) {
     if (!rawOutput) {
       throw new Error("rawOutput is required");
     }
 
-    return this.#request("/api/json-repair/sanitize", {
-      raw_output: rawOutput
-    });
+    return this.#safeParse(rawOutput);
   }
 
-  async guard(rawOutput, schema) {
+  guard(rawOutput, schema) {
     if (!rawOutput || !schema) {
       throw new Error("rawOutput and schema are required");
     }
 
-    return this.#request("/api/json-repair/guard", {
-      raw_output: rawOutput,
-      schema
-    });
+    return this.#safeParse(rawOutput, schema);
   }
 
-  async #request(path, body) {
-    const response = await fetch(this.baseUrl + path, {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-        "x-rapidapi-key": this.apiKey,
-        "x-rapidapi-host":
-          "llm-json-sanitizer-schema-guard.p.rapidapi.com"
-      },
-      body: JSON.stringify(body)
-    });
+  #safeParse(rawOutput, schema) {
+    let parsedData;
+    let repaired = false;
+    let stage = "initial";
+    let confidence = 1;
 
-    const data = await response.json();
+    // Try normal parse
+    try {
+      parsedData = JSON.parse(rawOutput);
+    } catch (err) {
+      stage = "repair_attempt";
 
-    if (!response.ok) {
-      const message =
-        data?.data?.response?.stage ||
-        data?.message ||
-        "Request failed";
-      throw new Error(message);
+      try {
+        const repairedString = jsonrepair(rawOutput);
+
+        // Strictness / Confidence Check
+        const lengthDiff = Math.abs(
+          repairedString.length - rawOutput.length
+        );
+
+        const modificationRatio = rawOutput.length
+          ? lengthDiff / rawOutput.length
+          : 1;
+
+        confidence = Math.max(0, 1 - modificationRatio);
+
+        parsedData = JSON.parse(repairedString);
+        repaired = true;
+
+        if (modificationRatio > 0.5) {
+          return {
+            success: false,
+            stage: "repair_suspicious",
+            meta: { repaired: true, confidence },
+            errors: [
+              {
+                type: "repair",
+                message:
+                  "Repair modified input heavily. Structure may be unreliable."
+              }
+            ]
+          };
+        }
+
+      } catch (repairErr) {
+        return {
+          success: false,
+          stage: "parse_failed",
+          meta: { repaired: false, confidence: 0 },
+          errors: [
+            {
+              type: "syntax",
+              message: repairErr.message
+            }
+          ]
+        };
+      }
     }
 
-    return data.data.response;
+    // Validate against schema (if provided)
+    if (schema && Object.keys(schema).length > 0) {
+      const validate = ajv.compile(schema); // keeping same behavior (no caching)
+      const valid = validate(parsedData);
+
+      if (!valid) {
+        return {
+          success: false,
+          stage: "validation_failed",
+          meta: { repaired, confidence },
+          errors: validate.errors
+        };
+      }
+    }
+
+    //  Success
+    return {
+      success: true,
+      stage: schema ? "validated" : "parsed_only",
+      meta: { repaired, confidence },
+      data: parsedData,
+      errors: []
+    };
   }
 }
 
