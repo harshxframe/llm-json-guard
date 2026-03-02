@@ -1,6 +1,6 @@
 {
   "name": "llm-json-guard",
-  "version": "1.0.4",
+  "version": "1.0.5",
   "description": "Production-safe JSON repair and schema validation for LLM outputs",
   "main": "index.js",
   "types": "index.d.ts",
