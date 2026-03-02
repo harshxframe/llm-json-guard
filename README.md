@@ -1,4 +1,3 @@
-````markdown
 # llm-json-guard
 
 Deterministic JSON repair and schema validation for LLM outputs.
@@ -155,4 +154,3 @@ If your system depends on structured AI output, this acts as a guardrail between
 ## License
 
 MIT
-````
