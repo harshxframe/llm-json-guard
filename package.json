@@ -18,5 +18,9 @@
     "type": "git",
     "url": "https://github.com/harshxframe/llm-json-guard.git"
   },
-  "license": "MIT"
+  "license": "MIT",
+  "dependencies": {
+    "ajv": "^8.18.0",
+    "jsonrepair": "^3.13.2"
+  }
 }
